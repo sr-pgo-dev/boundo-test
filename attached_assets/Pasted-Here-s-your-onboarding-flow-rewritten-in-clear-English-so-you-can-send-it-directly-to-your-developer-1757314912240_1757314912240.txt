@@ -1,0 +1,80 @@
+Here’s your onboarding flow rewritten in clear English so you can send it directly to your developer/team:
+
+---
+
+### 2. Onboarding Flow (7-Step Process)
+
+**Step 1: Basic Information**
+
+* Collect personal details.
+* Name input with validation.
+* Birthdate picker with automatic age calculation (must be between 18–65).
+* Gender selection (Male/Female + respectful options).
+* Sexual orientation selection.
+* Location picker (Country → State → City with dynamic loading).
+* Validation: user cannot proceed with incomplete fields.
+* Data persists when navigating between steps.
+
+**Step 2: Interests & Personality**
+
+* 14 categorized interests available (fitness, yoga, hiking, cooking, art, music, photography, reading, learning, technology, travel, sports, movies, gaming).
+* Multi-select interface (users can pick multiple).
+* Categories: health, creative, intellectual, adventure, entertainment.
+* Selected interests persist and influence compatibility scoring.
+
+**Step 3: Lifestyle Preferences**
+
+* Categories:
+
+  * Exercise: gym, yoga, running, hiking, team sports.
+  * Diet: vegetarian, vegan, halal, kosher, keto, no restrictions.
+  * Travel: frequent traveler, occasional, homebody, digital nomad.
+  * Social Activities: clubbing, concerts, museums, libraries, coffee shops, fine dining, bars, networking, outdoor events, house parties.
+  * Social Habits: drinking, cannabis use, vaping with frequency options.
+
+**Step 4: Values & Beliefs**
+
+* Core Values (15 options: family, career, spiritual, adventure, stability, creativity, honesty, loyalty, independence, community-service, learning, tradition, innovation, balance, ambition).
+* Kids Preferences: want soon (1–2 yrs), eventually (3+ yrs), maybe, don’t want, already have, open to partner having.
+* Growth Goals (12 options: fitness, spiritual growth, career, financial stability, mental health, creativity, travel, social skills, education, community, family, hobbies).
+* Intimacy Preferences: frequency settings + “prefer not to say”.
+* Pet Preferences: dogs, cats, birds, fish, reptiles, small pets, no pets, allergic.
+
+**Step 5: Dealbreakers**
+
+* 27 dealbreaker categories including: smoking, drug use, heavy drinking, kids, online-only, debt, extreme politics/religion, dietary restrictions, party lifestyle, introversion, workaholic, social media extremes, travel preferences, fitness extremes, work schedules, long-distance, pet requirements, etc.
+
+**Step 6: Partner Preferences**
+
+* Matching criteria setup:
+
+  * Age Range: dual slider (18–65).
+  * Distance: radius with miles/km toggle.
+  * Long-distance relationship preference.
+  * Meeting Timeline: 1–2 weeks, 1 month, 2–3 months, whenever feels right.
+  * Physical Preferences: ethnicity, body type, height (optional).
+  * Dealbreaker categories: health conditions, fashion, music, body mods, lifestyle, finances/living situation.
+  * Relationship Preferences: sexual preferences, relationship style.
+
+**Step 7: Photo Upload**
+
+* Mandatory: exactly 3 photos required.
+* Rules: solo only (no group pics), clear face (no sunglasses/hats), recent (within 2 years), high quality.
+* Upload UI with preview, remove/replace options.
+* Privacy notice + consent checkbox.
+
+**Onboarding Completion**
+
+* Profile is activated.
+* `onboardingAt` timestamp saved.
+* User redirected to matches page.
+* Profile completeness is validated.
+* All data stored properly in the database.
+
+---
+
+👉 Currently this flow is **not working correctly** and needs to be **fixed and made fully functional**.
+
+---
+
+Do you also want me to prepare a **developer task breakdown with fixes** (step-by-step what might be broken and how to correct it), or just keep it as client-facing documentation?
