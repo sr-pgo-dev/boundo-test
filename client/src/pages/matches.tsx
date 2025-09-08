@@ -229,7 +229,7 @@ export default function Matches() {
 
   const likeMutation = useMutation({
     mutationFn: (matchId: string) => 
-      apiRequest(`/api/matches/${matchId}/like`, { method: 'POST' }),
+      apiRequest('POST', `/api/matches/${matchId}/like`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/matches'] });
       setCurrentMatchIndex(prev => prev + 1);
@@ -249,7 +249,7 @@ export default function Matches() {
 
   const passMutation = useMutation({
     mutationFn: (matchId: string) => 
-      apiRequest(`/api/matches/${matchId}/pass`, { method: 'POST' }),
+      apiRequest('POST', `/api/matches/${matchId}/pass`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/matches'] });
       setCurrentMatchIndex(prev => prev + 1);
