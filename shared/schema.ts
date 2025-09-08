@@ -109,6 +109,57 @@ export const photos = pgTable("photos", {
   createdAt: timestamp("created_at").default(sql`now()`),
 });
 
+// Matches table
+export const matches = pgTable("matches", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  matchedUserId: varchar("matched_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  compatibilityScore: integer("compatibility_score").notNull(), // 0-100
+  isLiked: boolean("is_liked").default(false),
+  isPassed: boolean("is_passed").default(false),
+  isMatched: boolean("is_matched").default(false), // mutual like
+  lastActive: timestamp("last_active").default(sql`now()`),
+  createdAt: timestamp("created_at").default(sql`now()`),
+});
+
+// Compatibility details table
+export const compatibilityDetails = pgTable("compatibility_details", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  matchId: varchar("match_id").notNull().references(() => matches.id, { onDelete: "cascade" }),
+  sharedInterestsScore: integer("shared_interests_score").notNull(),
+  ageCompatibilityScore: integer("age_compatibility_score").notNull(),
+  locationProximityScore: integer("location_proximity_score").notNull(),
+  genderOrientationScore: integer("gender_orientation_score").notNull(),
+  astrologyCompatibilityScore: integer("astrology_compatibility_score"),
+  sharedInterests: jsonb("shared_interests"), // array of shared interests
+  createdAt: timestamp("created_at").default(sql`now()`),
+});
+
+// Photo reveals table
+export const photoReveals = pgTable("photo_reveals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  matchId: varchar("match_id").notNull().references(() => matches.id, { onDelete: "cascade" }),
+  revealedByUserId: varchar("revealed_by_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  revealedToUserId: varchar("revealed_to_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  photoId: varchar("photo_id").notNull().references(() => photos.id, { onDelete: "cascade" }),
+  revealedAt: timestamp("revealed_at").default(sql`now()`),
+});
+
+// Astrology signs enum
+export const astrologySignEnum = pgEnum('astrology_sign', [
+  'aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo',
+  'libra', 'scorpio', 'sagittarius', 'capricorn', 'aquarius', 'pisces'
+]);
+
+// User astrology profiles
+export const userAstrology = pgTable("user_astrology", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  sunSign: astrologySignEnum("sun_sign").notNull(),
+  enableAstrologyMatching: boolean("enable_astrology_matching").default(false),
+  createdAt: timestamp("created_at").default(sql`now()`),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   profile: one(userProfiles, {
@@ -133,6 +184,12 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     references: [partnerPreferences.userId],
   }),
   photos: many(photos),
+  astrology: one(userAstrology, {
+    fields: [users.id],
+    references: [userAstrology.userId],
+  }),
+  matches: many(matches, { relationName: "userMatches" }),
+  matchedBy: many(matches, { relationName: "matchedByUsers" }),
 }));
 
 export const userProfilesRelations = relations(userProfiles, ({ one }) => ({
@@ -177,9 +234,58 @@ export const partnerPreferencesRelations = relations(partnerPreferences, ({ one 
   }),
 }));
 
-export const photosRelations = relations(photos, ({ one }) => ({
+export const photosRelations = relations(photos, ({ one, many }) => ({
   user: one(users, {
     fields: [photos.userId],
+    references: [users.id],
+  }),
+  reveals: many(photoReveals),
+}));
+
+export const matchesRelations = relations(matches, ({ one, many }) => ({
+  user: one(users, {
+    fields: [matches.userId],
+    references: [users.id],
+    relationName: "userMatches",
+  }),
+  matchedUser: one(users, {
+    fields: [matches.matchedUserId],
+    references: [users.id],
+    relationName: "matchedByUsers",
+  }),
+  compatibilityDetails: one(compatibilityDetails),
+  photoReveals: many(photoReveals),
+}));
+
+export const compatibilityDetailsRelations = relations(compatibilityDetails, ({ one }) => ({
+  match: one(matches, {
+    fields: [compatibilityDetails.matchId],
+    references: [matches.id],
+  }),
+}));
+
+export const photoRevealsRelations = relations(photoReveals, ({ one }) => ({
+  match: one(matches, {
+    fields: [photoReveals.matchId],
+    references: [matches.id],
+  }),
+  revealedByUser: one(users, {
+    fields: [photoReveals.revealedByUserId],
+    references: [users.id],
+  }),
+  revealedToUser: one(users, {
+    fields: [photoReveals.revealedToUserId],
+    references: [users.id],
+  }),
+  photo: one(photos, {
+    fields: [photoReveals.photoId],
+    references: [photos.id],
+  }),
+}));
+
+export const userAstrologyRelations = relations(userAstrology, ({ one }) => ({
+  user: one(users, {
+    fields: [userAstrology.userId],
     references: [users.id],
   }),
 }));
@@ -233,6 +339,27 @@ export const insertPartnerPreferencesSchema = createInsertSchema(partnerPreferen
 export const insertPhotoSchema = createInsertSchema(photos).omit({
   id: true,
   userId: true,
+  createdAt: true,
+});
+
+export const insertMatchSchema = createInsertSchema(matches).omit({
+  id: true,
+  createdAt: true,
+  lastActive: true,
+});
+
+export const insertCompatibilityDetailsSchema = createInsertSchema(compatibilityDetails).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertPhotoRevealSchema = createInsertSchema(photoReveals).omit({
+  id: true,
+  revealedAt: true,
+});
+
+export const insertUserAstrologySchema = createInsertSchema(userAstrology).omit({
+  id: true,
   createdAt: true,
 });
 
@@ -304,4 +431,12 @@ export type PartnerPreferences = typeof partnerPreferences.$inferSelect;
 export type InsertPartnerPreferences = z.infer<typeof insertPartnerPreferencesSchema>;
 export type Photo = typeof photos.$inferSelect;
 export type InsertPhoto = z.infer<typeof insertPhotoSchema>;
+export type Match = typeof matches.$inferSelect;
+export type InsertMatch = z.infer<typeof insertMatchSchema>;
+export type CompatibilityDetails = typeof compatibilityDetails.$inferSelect;
+export type InsertCompatibilityDetails = z.infer<typeof insertCompatibilityDetailsSchema>;
+export type PhotoReveal = typeof photoReveals.$inferSelect;
+export type InsertPhotoReveal = z.infer<typeof insertPhotoRevealSchema>;
+export type UserAstrology = typeof userAstrology.$inferSelect;
+export type InsertUserAstrology = z.infer<typeof insertUserAstrologySchema>;
 export type CompleteOnboardingData = z.infer<typeof completeOnboardingSchema>;
