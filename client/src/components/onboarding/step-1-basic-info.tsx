@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { MarsStroke, Venus } from "lucide-react";
+import { Users, User } from "lucide-react";
 import type { CompleteOnboardingData } from "@shared/schema";
 
 interface Step1Props {
@@ -128,7 +128,7 @@ export function Step1BasicInfo({ data, updateData, onNext }: Step1Props) {
                 }`}
                 data-testid="button-gender-male"
               >
-                <MarsStroke className="w-6 h-6 mx-auto mb-2 text-primary" />
+                <User className="w-6 h-6 mx-auto mb-2 text-primary" />
                 <div className="font-medium">Male</div>
               </button>
               <button
@@ -139,7 +139,7 @@ export function Step1BasicInfo({ data, updateData, onNext }: Step1Props) {
                 }`}
                 data-testid="button-gender-female"
               >
-                <Venus className="w-6 h-6 mx-auto mb-2 text-primary" />
+                <Users className="w-6 h-6 mx-auto mb-2 text-primary" />
                 <div className="font-medium">Female</div>
               </button>
             </div>

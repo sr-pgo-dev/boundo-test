@@ -19,13 +19,17 @@ export function Step6PartnerPreferences({ data, updateData, onNext, onPrev }: St
   const { toast } = useToast();
   const [distance, setDistance] = useState(data.distance || 25);
 
-  const handleAgeRangeChange = (values: [number, number]) => {
-    updateData({ ageMin: values[0], ageMax: values[1] });
+  const handleAgeRangeChange = (values: number[]) => {
+    if (values.length >= 2) {
+      updateData({ ageMin: values[0], ageMax: values[1] });
+    }
   };
 
-  const handleDistanceChange = (values: [number]) => {
-    setDistance(values[0]);
-    updateData({ distance: values[0] });
+  const handleDistanceChange = (values: number[]) => {
+    if (values.length >= 1) {
+      setDistance(values[0]);
+      updateData({ distance: values[0] });
+    }
   };
 
   const selectTimeline = (timeline: string) => {
