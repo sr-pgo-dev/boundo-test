@@ -7,6 +7,10 @@ import {
   dealbreakers,
   partnerPreferences,
   photos,
+  userAstrology,
+  matches,
+  compatibilityDetails,
+  photoReveals,
   type User, 
   type InsertUser,
   type UserProfile,
@@ -23,10 +27,19 @@ import {
   type InsertPartnerPreferences,
   type Photo,
   type InsertPhoto,
+  type UserAstrology,
+  type InsertUserAstrology,
+  type Match,
+  type InsertMatch,
+  type CompatibilityDetails,
+  type PhotoReveal,
+  type InsertPhotoReveal,
   type CompleteOnboardingData
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
+import { calculateAstrologySign } from "./astrology";
+import { createMatchesForUser, getUserMatchProfile, type UserMatchProfile } from "./matching";
 
 export interface IStorage {
   // User methods
@@ -51,6 +64,21 @@ export interface IStorage {
   getCountries(): Promise<string[]>;
   getStates(country: string): Promise<string[]>;
   getCities(country: string, state: string): Promise<string[]>;
+  
+  // Astrology methods
+  createUserAstrology(userId: string, astrology: InsertUserAstrology): Promise<UserAstrology>;
+  getUserAstrology(userId: string): Promise<UserAstrology | undefined>;
+  updateUserAstrology(userId: string, astrology: Partial<InsertUserAstrology>): Promise<void>;
+  
+  // Matching methods
+  getMatches(userId: string, limit?: number): Promise<(Match & { matchedUser: UserProfile; compatibility: CompatibilityDetails })[]>;
+  createMatch(match: InsertMatch): Promise<Match>;
+  updateMatch(matchId: string, updates: Partial<InsertMatch>): Promise<void>;
+  
+  // Photo reveal methods
+  createPhotoReveal(reveal: InsertPhotoReveal): Promise<PhotoReveal>;
+  getPhotoReveals(matchId: string): Promise<PhotoReveal[]>;
+  isPhotoRevealed(userId: string, photoId: string, viewerUserId: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -182,7 +210,15 @@ export class DatabaseStorage implements IStorage {
         dealbreakers: data.partnerDealbreakers,
       });
 
-      // 7. Update user onboarding status
+      // 7. Create astrology profile
+      const sunSign = calculateAstrologySign(data.birthdate);
+      await tx.insert(userAstrology).values({
+        userId,
+        sunSign,
+        enableAstrologyMatching: false, // Default to disabled, user can enable later
+      });
+
+      // 8. Update user onboarding status
       await tx
         .update(users)
         .set({ 
@@ -191,6 +227,9 @@ export class DatabaseStorage implements IStorage {
         })
         .where(eq(users.id, userId));
     });
+
+    // After successful onboarding, create matches
+    await createMatchesForUser(userId);
   }
 
   async createPhoto(userId: string, photo: InsertPhoto): Promise<Photo> {
@@ -249,6 +288,100 @@ export class DatabaseStorage implements IStorage {
       },
     };
     return citiesMap[country]?.[state] || [];
+  }
+
+  // Astrology methods
+  async createUserAstrology(userId: string, astrology: InsertUserAstrology): Promise<UserAstrology> {
+    const [newAstrology] = await db
+      .insert(userAstrology)
+      .values({
+        ...astrology,
+        userId
+      })
+      .returning();
+    return newAstrology;
+  }
+
+  async getUserAstrology(userId: string): Promise<UserAstrology | undefined> {
+    const [astrology] = await db
+      .select()
+      .from(userAstrology)
+      .where(eq(userAstrology.userId, userId));
+    return astrology || undefined;
+  }
+
+  async updateUserAstrology(userId: string, updates: Partial<InsertUserAstrology>): Promise<void> {
+    await db
+      .update(userAstrology)
+      .set(updates)
+      .where(eq(userAstrology.userId, userId));
+  }
+
+  // Matching methods
+  async getMatches(userId: string, limit = 10): Promise<(Match & { matchedUser: UserProfile; compatibility: CompatibilityDetails })[]> {
+    const userMatches = await db
+      .select({
+        match: matches,
+        matchedUser: userProfiles,
+        compatibility: compatibilityDetails
+      })
+      .from(matches)
+      .innerJoin(userProfiles, eq(matches.matchedUserId, userProfiles.userId))
+      .innerJoin(compatibilityDetails, eq(matches.id, compatibilityDetails.matchId))
+      .where(eq(matches.userId, userId))
+      .orderBy(desc(matches.compatibilityScore))
+      .limit(limit);
+
+    return userMatches.map(row => ({
+      ...row.match,
+      matchedUser: row.matchedUser,
+      compatibility: row.compatibility
+    }));
+  }
+
+  async createMatch(match: InsertMatch): Promise<Match> {
+    const [newMatch] = await db
+      .insert(matches)
+      .values(match)
+      .returning();
+    return newMatch;
+  }
+
+  async updateMatch(matchId: string, updates: Partial<InsertMatch>): Promise<void> {
+    await db
+      .update(matches)
+      .set(updates)
+      .where(eq(matches.id, matchId));
+  }
+
+  // Photo reveal methods
+  async createPhotoReveal(reveal: InsertPhotoReveal): Promise<PhotoReveal> {
+    const [newReveal] = await db
+      .insert(photoReveals)
+      .values(reveal)
+      .returning();
+    return newReveal;
+  }
+
+  async getPhotoReveals(matchId: string): Promise<PhotoReveal[]> {
+    return await db
+      .select()
+      .from(photoReveals)
+      .where(eq(photoReveals.matchId, matchId));
+  }
+
+  async isPhotoRevealed(userId: string, photoId: string, viewerUserId: string): Promise<boolean> {
+    const [reveal] = await db
+      .select()
+      .from(photoReveals)
+      .where(
+        and(
+          eq(photoReveals.revealedByUserId, userId),
+          eq(photoReveals.revealedToUserId, viewerUserId),
+          eq(photoReveals.photoId, photoId)
+        )
+      );
+    return !!reveal;
   }
 }
 

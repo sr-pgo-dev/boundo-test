@@ -178,6 +178,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Matching endpoints
+  app.get("/api/matches", requireAuth, async (req: AuthenticatedRequest, res: any) => {
+    try {
+      const userId = req.userId;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const matches = await storage.getMatches(userId, limit);
+      res.json(matches);
+    } catch (error) {
+      console.error("Get matches error:", error);
+      res.status(500).json({ message: "Failed to fetch matches" });
+    }
+  });
+
+  app.post("/api/matches/:matchId/like", requireAuth, async (req: AuthenticatedRequest, res: any) => {
+    try {
+      const userId = req.userId;
+      const { matchId } = req.params;
+      
+      await storage.updateMatch(matchId, { isLiked: true });
+      
+      // TODO: Check for mutual like and create match
+      
+      res.json({ message: "Match liked successfully" });
+    } catch (error) {
+      console.error("Like match error:", error);
+      res.status(500).json({ message: "Failed to like match" });
+    }
+  });
+
+  app.post("/api/matches/:matchId/pass", requireAuth, async (req: AuthenticatedRequest, res: any) => {
+    try {
+      const userId = req.userId;
+      const { matchId } = req.params;
+      
+      await storage.updateMatch(matchId, { isPassed: true });
+      
+      res.json({ message: "Match passed successfully" });
+    } catch (error) {
+      console.error("Pass match error:", error);
+      res.status(500).json({ message: "Failed to pass match" });
+    }
+  });
+
+  app.post("/api/matches/:matchId/reveal-photo", requireAuth, async (req: AuthenticatedRequest, res: any) => {
+    try {
+      const userId = req.userId;
+      const { matchId } = req.params;
+      const { photoId } = req.body;
+
+      if (!photoId) {
+        return res.status(400).json({ message: "Photo ID is required" });
+      }
+
+      // Get match details to find the other user
+      const matches = await storage.getMatches(userId, 1);
+      const match = matches.find(m => m.id === matchId);
+      
+      if (!match) {
+        return res.status(404).json({ message: "Match not found" });
+      }
+
+      // Check if compatibility is high enough (68% threshold)
+      if (match.compatibilityScore < 68) {
+        return res.status(403).json({ 
+          message: "Compatibility score must be at least 68% to reveal photos" 
+        });
+      }
+
+      // Create photo reveal
+      await storage.createPhotoReveal({
+        matchId,
+        revealedByUserId: userId,
+        revealedToUserId: match.matchedUserId,
+        photoId
+      });
+
+      res.json({ message: "Photo revealed successfully" });
+    } catch (error) {
+      console.error("Reveal photo error:", error);
+      res.status(500).json({ message: "Failed to reveal photo" });
+    }
+  });
+
+  // Astrology endpoints
+  app.get("/api/astrology", requireAuth, async (req: AuthenticatedRequest, res: any) => {
+    try {
+      const userId = req.userId;
+      const astrology = await storage.getUserAstrology(userId);
+      res.json(astrology);
+    } catch (error) {
+      console.error("Get astrology error:", error);
+      res.status(500).json({ message: "Failed to fetch astrology" });
+    }
+  });
+
+  app.put("/api/astrology", requireAuth, async (req: AuthenticatedRequest, res: any) => {
+    try {
+      const userId = req.userId;
+      const { enableAstrologyMatching } = req.body;
+      
+      await storage.updateUserAstrology(userId, { enableAstrologyMatching });
+      
+      res.json({ message: "Astrology preferences updated successfully" });
+    } catch (error) {
+      console.error("Update astrology error:", error);
+      res.status(500).json({ message: "Failed to update astrology preferences" });
+    }
+  });
+
   // Serve uploaded files
   app.use('/uploads', express.static('uploads'));
 
