@@ -74,7 +74,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Onboarding endpoints
-  app.post("/api/onboarding/complete", requireAuth, async (req: AuthenticatedRequest, res) => {
+  app.post("/api/onboarding/complete", requireAuth, async (req: AuthenticatedRequest, res: any) => {
     try {
       const userId = req.userId;
       const validatedData = completeOnboardingSchema.parse(req.body);
@@ -110,7 +110,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Photo upload endpoints
-  app.post("/api/photos/upload", requireAuth, upload.single('photo'), async (req: AuthenticatedRequest, res) => {
+  app.post("/api/photos/upload", requireAuth, upload.single('photo'), async (req: AuthenticatedRequest, res: any) => {
     try {
       const userId = req.userId;
       const file = req.file;
@@ -137,7 +137,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/photos", requireAuth, async (req: AuthenticatedRequest, res) => {
+  app.get("/api/photos", requireAuth, async (req: AuthenticatedRequest, res: any) => {
     try {
       const userId = req.userId;
       const photos = await storage.getUserPhotos(userId);
@@ -148,7 +148,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/photos/:photoId", requireAuth, async (req: AuthenticatedRequest, res) => {
+  app.delete("/api/photos/:photoId", requireAuth, async (req: AuthenticatedRequest, res: any) => {
     try {
       const userId = req.userId;
       const { photoId } = req.params;
@@ -161,7 +161,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User profile endpoints
-  app.get("/api/profile", requireAuth, async (req: AuthenticatedRequest, res) => {
+  app.get("/api/profile", requireAuth, async (req: AuthenticatedRequest, res: any) => {
     try {
       const userId = req.userId;
       const user = await storage.getUser(userId);

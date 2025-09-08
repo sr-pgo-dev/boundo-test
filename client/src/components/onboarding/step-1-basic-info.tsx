@@ -177,7 +177,7 @@ export function Step1BasicInfo({ data, updateData, onNext }: Step1Props) {
                   <SelectValue placeholder="Country" />
                 </SelectTrigger>
                 <SelectContent>
-                  {countries?.map((country: string) => (
+                  {Array.isArray(countries) && countries.map((country: string) => (
                     <SelectItem key={country} value={country}>{country}</SelectItem>
                   ))}
                 </SelectContent>
@@ -192,7 +192,7 @@ export function Step1BasicInfo({ data, updateData, onNext }: Step1Props) {
                   <SelectValue placeholder="State" />
                 </SelectTrigger>
                 <SelectContent>
-                  {states?.map((state: string) => (
+                  {Array.isArray(states) && states.map((state: string) => (
                     <SelectItem key={state} value={state}>{state}</SelectItem>
                   ))}
                 </SelectContent>
@@ -207,7 +207,7 @@ export function Step1BasicInfo({ data, updateData, onNext }: Step1Props) {
                   <SelectValue placeholder="City" />
                 </SelectTrigger>
                 <SelectContent>
-                  {cities?.map((city: string) => (
+                  {Array.isArray(cities) && cities.map((city: string) => (
                     <SelectItem key={city} value={city}>{city}</SelectItem>
                   ))}
                 </SelectContent>
