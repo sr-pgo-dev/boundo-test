@@ -18,6 +18,15 @@ interface CompatibilityDetails {
   sharedInterests: string[];
 }
 
+interface Photo {
+  id: string;
+  userId: string;
+  filename: string;
+  url: string;
+  orderIndex: number;
+  isActive: boolean;
+}
+
 interface UserProfile {
   name: string;
   age: number;
@@ -27,6 +36,7 @@ interface UserProfile {
   orientation: string;
   occupation: string;
   bio: string;
+  photos?: Photo[];
 }
 
 interface Match {
@@ -153,19 +163,26 @@ function MatchCard({ match, onLike, onPass }: {
       </CardHeader>
       
       <CardContent className="space-y-4">
-        <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-4 min-h-[120px] flex items-center justify-center">
-          {canRevealPhotos ? (
-            <div className="text-center">
+        <div className="bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden min-h-[200px] flex items-center justify-center">
+          {canRevealPhotos && matchedUser.photos && matchedUser.photos.length > 0 ? (
+            <img 
+              src={matchedUser.photos[0].url}
+              alt={`Photo of ${matchedUser.name}`}
+              className="w-full h-[200px] object-cover"
+              data-testid={`img-photo-${match.id}`}
+            />
+          ) : canRevealPhotos ? (
+            <div className="text-center p-4">
               <div className="w-16 h-16 bg-gradient-to-br from-pink-100 to-purple-100 dark:from-pink-900 dark:to-purple-900 rounded-full flex items-center justify-center mx-auto mb-2">
                 <Users className="w-8 h-8 text-pink-600" />
               </div>
-              <p className="text-sm text-muted-foreground">Photo available</p>
+              <p className="text-sm text-muted-foreground">No photos available</p>
               <p className="text-xs text-muted-foreground mt-1">
-                High compatibility unlocked photos
+                High compatibility unlocked
               </p>
             </div>
           ) : (
-            <div className="text-center">
+            <div className="text-center p-4">
               <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-2">
                 <Lock className="w-8 h-8 text-gray-500" />
               </div>

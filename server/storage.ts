@@ -318,7 +318,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Matching methods
-  async getMatches(userId: string, limit = 10): Promise<(Match & { matchedUser: UserProfile; compatibility: CompatibilityDetails })[]> {
+  async getMatches(userId: string, limit = 10): Promise<(Match & { matchedUser: UserProfile & { photos: Photo[] }; compatibility: CompatibilityDetails })[]> {
     const userMatches = await db
       .select({
         match: matches,
@@ -332,11 +332,26 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(matches.compatibilityScore))
       .limit(limit);
 
-    return userMatches.map(row => ({
-      ...row.match,
-      matchedUser: row.matchedUser,
-      compatibility: row.compatibility
-    }));
+    // Get photos for each matched user
+    const results = [];
+    for (const row of userMatches) {
+      const userPhotos = await db
+        .select()
+        .from(photos)
+        .where(eq(photos.userId, row.matchedUser.userId))
+        .orderBy(photos.orderIndex);
+      
+      results.push({
+        ...row.match,
+        matchedUser: {
+          ...row.matchedUser,
+          photos: userPhotos
+        },
+        compatibility: row.compatibility
+      });
+    }
+
+    return results;
   }
 
   async createMatch(match: InsertMatch): Promise<Match> {
