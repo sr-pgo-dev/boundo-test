@@ -319,6 +319,20 @@ export class DatabaseStorage implements IStorage {
 
   // Matching methods
   async getMatches(userId: string, limit = 10): Promise<(Match & { matchedUser: UserProfile & { photos: Photo[] }; compatibility: CompatibilityDetails })[]> {
+    // First get the current user's gender to filter matches properly
+    const [currentUser] = await db
+      .select({ gender: userProfiles.gender })
+      .from(userProfiles)
+      .where(eq(userProfiles.userId, userId))
+      .limit(1);
+
+    if (!currentUser) {
+      return [];
+    }
+
+    // Determine which gender they should see
+    const targetGender = currentUser.gender === 'male' ? 'female' : 'male';
+
     const userMatches = await db
       .select({
         match: matches,
@@ -328,7 +342,12 @@ export class DatabaseStorage implements IStorage {
       .from(matches)
       .innerJoin(userProfiles, eq(matches.matchedUserId, userProfiles.userId))
       .innerJoin(compatibilityDetails, eq(matches.id, compatibilityDetails.matchId))
-      .where(eq(matches.userId, userId))
+      .where(
+        and(
+          eq(matches.userId, userId),
+          eq(userProfiles.gender, targetGender) // Filter by target gender
+        )
+      )
       .orderBy(desc(matches.compatibilityScore))
       .limit(limit);
 
