@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Sparkles, Star, Info, Settings } from 'lucide-react';
+import { Sparkles, Star, Info, Settings, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { useAuth } from '@/hooks/use-auth';
 
 interface UserAstrology {
   sunSign: string;
@@ -195,6 +196,7 @@ function AstrologySettings({ astrology, onUpdate }: {
 
 export default function SettingsPage() {
   const { toast } = useToast();
+  const { logout, user } = useAuth();
   const queryClient = useQueryClient();
 
   const { data: astrology, isLoading } = useQuery<UserAstrology>({
@@ -270,6 +272,36 @@ export default function SettingsPage() {
             astrology={astrology} 
             onUpdate={handleAstrologyToggle}
           />
+          
+          {/* Account Management Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="w-5 h-5" />
+                Account Management
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                <div>
+                  <h3 className="font-medium">Signed in as</h3>
+                  <p className="text-sm text-muted-foreground">{user?.username}</p>
+                </div>
+              </div>
+              
+              <Separator />
+              
+              <Button 
+                variant="destructive" 
+                onClick={logout}
+                className="w-full flex items-center gap-2"
+                data-testid="button-logout"
+              >
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
