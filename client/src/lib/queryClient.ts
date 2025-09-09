@@ -24,15 +24,24 @@ export async function apiRequest(
   data?: unknown | undefined,
 ): Promise<Response> {
   const authHeaders = getAuthHeaders();
-  const contentHeaders = data ? { "Content-Type": "application/json" } : {};
+  const headers: Record<string, string> = { ...authHeaders };
+  let body: string | FormData | undefined;
+
+  if (data) {
+    if (data instanceof FormData) {
+      // For FormData, let the browser set Content-Type with boundary
+      body = data;
+    } else {
+      // For JSON data, set Content-Type and stringify
+      headers["Content-Type"] = "application/json";
+      body = JSON.stringify(data);
+    }
+  }
   
   const res = await fetch(url, {
     method,
-    headers: {
-      ...contentHeaders,
-      ...authHeaders,
-    },
-    body: data ? JSON.stringify(data) : undefined,
+    headers,
+    body,
     credentials: "include",
   });
 
