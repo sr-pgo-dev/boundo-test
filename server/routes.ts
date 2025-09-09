@@ -3,11 +3,18 @@ import express from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
 import path from "path";
+import fs from "fs";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { storage } from "./storage";
 import { completeOnboardingSchema, insertUserSchema } from "@shared/schema";
 import { z } from "zod";
+
+// Ensure uploads directory exists
+const uploadsDir = "uploads";
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 // JWT Secret - in production, use environment variable
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this-in-production";
