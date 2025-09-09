@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Link, useLocation } from "wouter";
+import { Link } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -17,7 +18,7 @@ const loginSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>;
 
 export default function Login() {
-  const [, setLocation] = useLocation();
+  const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -48,16 +49,8 @@ export default function Login() {
         throw new Error(result.message || "Login failed");
       }
 
-      // Store token in localStorage
-      localStorage.setItem("token", result.token);
-      localStorage.setItem("user", JSON.stringify(result.user));
-
-      // Redirect based on onboarding status
-      if (result.user.onboardingCompleted) {
-        setLocation("/matches");
-      } else {
-        setLocation("/onboarding");
-      }
+      // Update auth context - this will trigger automatic redirect
+      login(result.token, result.user);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {

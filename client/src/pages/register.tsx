@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Link, useLocation } from "wouter";
+import { Link } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
 
 const registerSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -21,7 +22,7 @@ const registerSchema = z.object({
 type RegisterForm = z.infer<typeof registerSchema>;
 
 export default function Register() {
-  const [, setLocation] = useLocation();
+  const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -56,12 +57,8 @@ export default function Register() {
         throw new Error(result.message || "Registration failed");
       }
 
-      // Store token in localStorage
-      localStorage.setItem("token", result.token);
-      localStorage.setItem("user", JSON.stringify(result.user));
-
-      // Redirect to onboarding since new users haven't completed it
-      setLocation("/onboarding");
+      // Update auth context - this will trigger automatic redirect to onboarding
+      login(result.token, result.user);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
