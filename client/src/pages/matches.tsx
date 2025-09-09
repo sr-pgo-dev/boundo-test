@@ -247,8 +247,15 @@ export default function Matches() {
   const likeMutation = useMutation({
     mutationFn: (matchId: string) => 
       apiRequest('POST', `/api/matches/${matchId}/like`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/matches'] });
+    onSuccess: (_, matchId) => {
+      // Optimistically update the cache
+      queryClient.setQueryData(['/api/matches'], (oldData: Match[] | undefined) => {
+        if (!oldData) return [];
+        return oldData.map(match => 
+          match.id === matchId ? { ...match, isLiked: true } : match
+        );
+      });
+      // Move to next match immediately
       setCurrentMatchIndex(prev => prev + 1);
       toast({
         title: "Match liked!",
@@ -267,8 +274,15 @@ export default function Matches() {
   const passMutation = useMutation({
     mutationFn: (matchId: string) => 
       apiRequest('POST', `/api/matches/${matchId}/pass`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/matches'] });
+    onSuccess: (_, matchId) => {
+      // Optimistically update the cache
+      queryClient.setQueryData(['/api/matches'], (oldData: Match[] | undefined) => {
+        if (!oldData) return [];
+        return oldData.map(match => 
+          match.id === matchId ? { ...match, isPassed: true } : match
+        );
+      });
+      // Move to next match immediately
       setCurrentMatchIndex(prev => prev + 1);
       toast({
         title: "Match passed",
@@ -303,9 +317,12 @@ export default function Matches() {
     );
   }
 
-  const currentMatch = matches[currentMatchIndex];
+  // Reset index if it exceeds available matches
+  const availableMatches = matches.filter(match => !match.isLiked && !match.isPassed);
+  const effectiveIndex = currentMatchIndex >= availableMatches.length ? 0 : currentMatchIndex;
+  const currentMatch = availableMatches[effectiveIndex];
 
-  if (!currentMatch) {
+  if (!currentMatch && !isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-6">
@@ -330,7 +347,7 @@ export default function Matches() {
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold mb-2">Discover Matches</h1>
           <p className="text-muted-foreground">
-            Match {currentMatchIndex + 1} of {matches.length}
+            Match {effectiveIndex + 1} of {availableMatches.length}
           </p>
         </div>
         
