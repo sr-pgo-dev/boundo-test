@@ -232,7 +232,38 @@ function checkGenderOrientationCompatibility(
   const u2Gender = user2.profile.gender;
   const u2Orientation = user2.profile.orientation;
 
-  // Perfect matches
+  // Helper function to check if orientation is attracted to a specific gender
+  const isAttractedTo = (orientation: string, gender: string, targetGender: string): boolean => {
+    switch (orientation) {
+      case 'straight':
+        return (gender === 'male' && targetGender === 'female') || 
+               (gender === 'female' && targetGender === 'male');
+      case 'gay':
+        return gender === 'male' && targetGender === 'male';
+      case 'lesbian':
+        return gender === 'female' && targetGender === 'female';
+      case 'bisexual':
+      case 'pansexual':
+        return true; // Attracted to all genders
+      case 'asexual':
+        return true; // May still want romantic relationships
+      case 'other':
+        return true; // Give benefit of the doubt for custom orientations
+      default:
+        return false;
+    }
+  };
+
+  // Check mutual attraction
+  const user1AttractedToUser2 = isAttractedTo(u1Orientation, u1Gender, u2Gender);
+  const user2AttractedToUser1 = isAttractedTo(u2Orientation, u2Gender, u1Gender);
+
+  // Both must be potentially attracted to each other
+  if (!user1AttractedToUser2 || !user2AttractedToUser1) {
+    return 0;
+  }
+
+  // Perfect matches - traditional orientations
   if ((u1Gender === 'male' && u1Orientation === 'straight' && u2Gender === 'female' && u2Orientation === 'straight') ||
       (u1Gender === 'female' && u1Orientation === 'straight' && u2Gender === 'male' && u2Orientation === 'straight') ||
       (u1Gender === 'male' && u1Orientation === 'gay' && u2Gender === 'male' && u2Orientation === 'gay') ||
@@ -240,14 +271,24 @@ function checkGenderOrientationCompatibility(
     return 100;
   }
 
-  // Bisexual/pansexual compatibility
+  // High compatibility - bisexual/pansexual with compatible partners
   if (u1Orientation === 'bisexual' || u1Orientation === 'pansexual' || 
       u2Orientation === 'bisexual' || u2Orientation === 'pansexual') {
-    return 80;
+    return 85;
   }
 
-  // No compatibility
-  return 0;
+  // Good compatibility - asexual with compatible orientations
+  if (u1Orientation === 'asexual' || u2Orientation === 'asexual') {
+    return 75;
+  }
+
+  // Moderate compatibility - other/custom orientations
+  if (u1Orientation === 'other' || u2Orientation === 'other') {
+    return 70;
+  }
+
+  // Default compatibility if mutual attraction exists
+  return 60;
 }
 
 /**
@@ -336,6 +377,12 @@ export async function findPotentialMatches(userId: string, limit = 10): Promise<
     // Dealbreaker filter
     if (!passesDealbreakerFilters(currentUser, matchProfile)) {
       continue;
+    }
+
+    // Gender/orientation compatibility filter
+    const genderOrientationScore = checkGenderOrientationCompatibility(currentUser, matchProfile);
+    if (genderOrientationScore === 0) {
+      continue; // Skip incompatible orientations
     }
 
     potentialMatches.push(matchProfile);
