@@ -36,6 +36,7 @@ export const userProfiles = pgTable("user_profiles", {
   state: text("state").notNull(),
   city: text("city").notNull(),
   bio: text("bio"),
+  occupation: text("occupation"),
   createdAt: timestamp("created_at").default(sql`now()`),
   updatedAt: timestamp("updated_at").default(sql`now()`),
 });

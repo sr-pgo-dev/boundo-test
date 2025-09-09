@@ -19,7 +19,7 @@ interface CompatibilityDetails {
 }
 
 interface UserProfile {
-  firstName: string;
+  name: string;
   age: number;
   city: string;
   state: string;
@@ -124,7 +124,7 @@ function MatchCard({ match, onLike, onPass }: {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold" data-testid={`text-name-${match.id}`}>
-              {matchedUser.firstName}
+              {matchedUser.name}
             </h3>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Calendar className="w-3 h-3" />
