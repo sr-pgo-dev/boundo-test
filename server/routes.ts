@@ -24,7 +24,7 @@ const upload = multer({
     }
   }),
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
+    fileSize: 15 * 1024 * 1024, // 5MB limit
   },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
@@ -39,7 +39,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication middleware (mock - replace with real auth)
   const requireAuth = (req: AuthenticatedRequest, res: any, next: any) => {
     // Mock user ID for development - replace with real session/JWT auth
-    req.userId = "mock-user-id";
+    req.userId = "mock-fe-user-id";
     next();
   };
 

@@ -20,24 +20,24 @@ export function PhotoUpload({ orderIndex, onPhotoUpload }: PhotoUploadProps) {
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
       const formData = new FormData();
-      formData.append('photo', file);
-      formData.append('orderIndex', orderIndex.toString());
-      
-      const response = await apiRequest('POST', '/api/photos/upload', formData);
+      formData.append("photo", file);
+      formData.append("orderIndex", orderIndex.toString());
+
+      const response = await apiRequest("POST", "/api/photos/upload", formData);
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/photos'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/photos"] });
       toast({ title: "Success", description: "Photo uploaded successfully" });
     },
     onError: (error) => {
-      toast({ 
-        title: "Error", 
-        description: "Failed to upload photo. Please try again.", 
-        variant: "destructive" 
+      toast({
+        title: "Error",
+        description: "Failed to upload photo. Please try again.",
+        variant: "destructive",
       });
-      console.error('Upload error:', error);
-    }
+      console.error("Upload error:", error);
+    },
   });
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,21 +45,21 @@ export function PhotoUpload({ orderIndex, onPhotoUpload }: PhotoUploadProps) {
     if (!file) return;
 
     // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast({ 
-        title: "Invalid file", 
-        description: "Please select an image file", 
-        variant: "destructive" 
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Invalid file",
+        description: "Please select an image file",
+        variant: "destructive",
       });
       return;
     }
 
     // Validate file size (5MB limit)
-    if (file.size > 5 * 1024 * 1024) {
-      toast({ 
-        title: "File too large", 
-        description: "Please select an image smaller than 5MB", 
-        variant: "destructive" 
+    if (file.size > 15 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image smaller than 5MB",
+        variant: "destructive",
       });
       return;
     }
@@ -77,7 +77,7 @@ export function PhotoUpload({ orderIndex, onPhotoUpload }: PhotoUploadProps) {
     // Upload file
     setIsUploading(true);
     uploadMutation.mutate(file, {
-      onSettled: () => setIsUploading(false)
+      onSettled: () => setIsUploading(false),
     });
   };
 
@@ -85,7 +85,7 @@ export function PhotoUpload({ orderIndex, onPhotoUpload }: PhotoUploadProps) {
     setPreview(null);
     onPhotoUpload(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
@@ -97,8 +97,8 @@ export function PhotoUpload({ orderIndex, onPhotoUpload }: PhotoUploadProps) {
     <div className="relative">
       {preview ? (
         <div className="relative group">
-          <img 
-            src={preview} 
+          <img
+            src={preview}
             alt={`Photo ${orderIndex}`}
             className="w-full h-48 object-cover rounded-lg border border-border"
           />
@@ -128,17 +128,19 @@ export function PhotoUpload({ orderIndex, onPhotoUpload }: PhotoUploadProps) {
           )}
         </div>
       ) : (
-        <div 
+        <div
           className="border-2 border-dashed border-border rounded-lg p-8 text-center min-h-48 flex flex-col justify-center items-center cursor-pointer hover:border-primary hover:bg-accent transition-all"
           onClick={triggerFileSelect}
           data-testid={`photo-upload-zone-${orderIndex}`}
         >
           <Camera className="w-12 h-12 text-muted-foreground mb-4" />
-          <p className="text-sm font-medium text-foreground mb-1">Photo {orderIndex}</p>
+          <p className="text-sm font-medium text-foreground mb-1">
+            Photo {orderIndex}
+          </p>
           <p className="text-xs text-muted-foreground">Required</p>
         </div>
       )}
-      
+
       <input
         ref={fileInputRef}
         type="file"
